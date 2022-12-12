@@ -1,0 +1,12 @@
+name: ffmpeg
+version: 0.1.0
+
+development_dependencies:
+  # we use stumpy to extract each pixels colour and draw bounding boxes
+  stumpy_png:
+    github: stumpycr/stumpy_png
+
+authors:
+  - Stephen von Takach <steve@place.tech>
+
+license: MIT
