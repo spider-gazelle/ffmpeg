@@ -6,7 +6,7 @@ require "stumpy_png"
 module FFmpeg
   describe FFmpeg do
     it "decodes a frame of a video file" do
-      stream_url = "../../client-projects/libavcodec/test.mkv"
+      stream_url = "./test.mp4"
       format = FormatContext.new.open(stream_url).stream_info
       stream_index = format.find_best_stream MediaType::Video
       puts "found stream index #{stream_index}"
