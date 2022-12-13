@@ -24,7 +24,7 @@ jobs:
     - uses: actions/checkout@v3
     - name: Install build deps
       run: |
-        apk add --update --no-cache libswscale-dev ffmpeg
+        apk add --update --no-cache libswscale-4-dev ffmpeg
     - name: Install dependencies
       run: shards install --ignore-crystal-version
     - name: Format
