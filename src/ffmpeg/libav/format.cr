@@ -36,8 +36,8 @@ module FFmpeg::LibAV
       write_flag : LibC::Int,
       opaque : Void*,
       read_packet : (Void*, UInt8*, LibC::Int -> LibC::Int),
-      write_packet : (Void*, UInt8*, LibC::Int -> LibC::Int),
-      seek : (Void*, LibC::Long, LibC::Int -> LibC::Long)
+      write_packet : Void*, # (Void*, UInt8*, LibC::Int -> LibC::Int),
+      seek : Void*          # (Void*, LibC::Long, LibC::Int -> LibC::Long)
     ) : IOContext
 
     type IOContext = Void*

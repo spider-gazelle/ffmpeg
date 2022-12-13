@@ -5,9 +5,23 @@ require "stumpy_png"
 
 module FFmpeg
   describe FFmpeg do
+    # used to ensure we are not blocking the reactor completely
+    spawn do
+      loop do
+        print "~"
+        Fiber.yield
+      end
+    end
+
     it "decodes a frame of a video file" do
       stream_url = "./test.mp4"
-      format = Format.new.open(stream_url).stream_info
+      file_io = File.open(stream_url)
+      format = Format.new
+      format.on_read do |bytes|
+        print "r"
+        file_io.read(bytes)
+      end
+      format.open(stream_url).stream_info
       stream_index = format.find_best_stream MediaType::Video
       puts "found stream index #{stream_index}"
 

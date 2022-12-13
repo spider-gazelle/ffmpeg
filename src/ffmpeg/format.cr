@@ -19,6 +19,30 @@ class FFmpeg::Format
     LibAV::Format.close_input(@context_pointer)
   end
 
+  @io_context : LibAV::Format::IOContext? = nil
+  @callback_ref : Pointer(Void)? = nil
+
+  # Slice => bytes read
+  def on_read(&callback : Bytes -> Int32)
+    # we need our callback to be available
+    callback_ptr = Box.box(callback)
+    @callback_ref = callback_ptr
+    @io_context = io = LibAV::Format.alloc_io_context(Pointer(UInt8).null, 0, 0, callback_ptr, ->(boxed_callback, bytes_ptr, bytes_size) {
+      # ensure we are non-blocking
+      Fiber.yield
+
+      # obtain the data requested
+      bytes = Bytes.new(bytes_ptr, bytes_size)
+      unboxed_callback = Box(typeof(callback)).unbox(boxed_callback)
+      unboxed_callback.call(bytes)
+    }, Pointer(Void).null, Pointer(Void).null)
+    raise "failed to allocate IO context" if io.null?
+
+    @context.value.pb = io
+
+    self
+  end
+
   def open(input : String)
     raise "already open" if open?
     success = LibAV::Format.open_input(pointerof(@context), input, Pointer(Void).null, Pointer(Void).null)

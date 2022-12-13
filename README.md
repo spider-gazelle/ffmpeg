@@ -1,7 +1,6 @@
 # ffmpeg libav bindings for crystal lang
 
 Primarily to extract video frames from streams and files for processing by AI.
-NOTE:: currently blocks the crystal-lang reactor and not recommened for use yet.
 
 ## Installation
 
@@ -20,9 +19,7 @@ NOTE:: currently blocks the crystal-lang reactor and not recommened for use yet.
 
 ## Usage
 
-```crystal
-require "ffmpeg"
-```
+See the specs for usage
 
 ## Contributing
 
