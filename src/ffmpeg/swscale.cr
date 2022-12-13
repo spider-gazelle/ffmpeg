@@ -1,6 +1,6 @@
 require "../ffmpeg"
 
-class FFmpeg::SWScaleContext
+class FFmpeg::SWScale
   def initialize(
     input_width : Int,
     input_height : Int,
@@ -27,7 +27,7 @@ class FFmpeg::SWScaleContext
   end
 
   def self.new(
-    codec : CodecContext,
+    codec : Codec,
     output_width : Int? = nil,
     output_height : Int? = nil,
     output_format : PixelFormat = PixelFormat::Rgb24,

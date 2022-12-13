@@ -1,9 +1,10 @@
 require "../ffmpeg"
 
-class FFmpeg::CodecContext
+class FFmpeg::Codec
   def initialize
-    # NOTE:: removing this puts causes alloc_context to fail??
-    puts "alloc_context3"
+    # NOTE:: removing this print causes alloc_context to fail??
+    # actually stummped on how to resolve this
+    print "\b"
     context = LibAV::Codec.alloc_context
     raise "failed to allocate context" if context.null?
     @context = context
@@ -17,8 +18,8 @@ class FFmpeg::CodecContext
     @cleanup = false
   end
 
-  def self.new(parameters : CodecParameters)
-    codec = CodecContext.new
+  def self.new(parameters : Parameters)
+    codec = self.new
     codec.parameters = parameters
     codec
   end
@@ -36,13 +37,13 @@ class FFmpeg::CodecContext
   end
 
   def parameters
-    params = CodecParameters.new
+    params = Parameters.new
     success = LibAV::Codec.parameters_from_context(params, @context)
     raise "failed to obtain parameters from context with #{success}" if success < 0
     params
   end
 
-  def parameters=(params : CodecParameters)
+  def parameters=(params : Parameters)
     LibAV::Codec.parameters_to_context(@context, params)
     params
   end

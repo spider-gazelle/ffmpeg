@@ -7,7 +7,7 @@ module FFmpeg
   describe FFmpeg do
     it "decodes a frame of a video file" do
       stream_url = "./test.mp4"
-      format = FormatContext.new.open(stream_url).stream_info
+      format = Format.new.open(stream_url).stream_info
       stream_index = format.find_best_stream MediaType::Video
       puts "found stream index #{stream_index}"
 
@@ -15,12 +15,12 @@ module FFmpeg
       params = format.parameters(stream_index)
       puts "found codec details"
 
-      codec = CodecContext.new params
+      codec = Codec.new params
       codec.open
       puts "opened video stream"
 
       rgb_frame = Frame.new(codec.width, codec.height, 3)
-      scaler = SWScaleContext.new(codec, output_format: :rgb24, scaling_method: :bicublin)
+      scaler = SWScale.new(codec, output_format: :rgb24, scaling_method: :bicublin)
       puts "prepared scaler, #{codec.width}x#{codec.height} @ #{codec.pixel_format}"
 
       canvas = StumpyCore::Canvas.new(codec.width, codec.height, StumpyCore::RGBA::WHITE)

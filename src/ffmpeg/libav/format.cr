@@ -74,7 +74,7 @@ module FFmpeg::LibAV
       event_flags : LibC::Int
       r_frame_rate : Codec::Rational
       recommended_encoder_configuration : LibC::Char*
-      codecpar : Codec::AVCodecParameters*
+      codecpar : Codec::AVCodecParameters
     end
   end
 end

@@ -1,6 +1,6 @@
 require "../ffmpeg"
 
-class FFmpeg::FormatContext
+class FFmpeg::Format
   def initialize
     @context = LibAV::Format.alloc_context
     raise "failed to allocate context" if @context.null?
@@ -47,8 +47,9 @@ class FFmpeg::FormatContext
   end
 
   def parameters(stream_index : Int)
-    codec_ctx = CodecContext.new @context.value.streams[stream_index].value.codec
-    codec_ctx.parameters
+    # codec_ctx = Codec.new @context.value.streams[stream_index].value.codec
+    # codec_ctx.parameters
+    Parameters.new(@context.value.streams[stream_index].value.codecpar)
   end
 
   # 4MB buffer
