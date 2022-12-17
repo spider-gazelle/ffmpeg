@@ -4,23 +4,43 @@ require "stumpy_core"
 require "stumpy_png"
 
 module FFmpeg
-  describe FFmpeg do
-    # used to ensure we are not blocking the reactor completely
-    spawn do
-      loop do
-        print "~"
-        Fiber.yield
-      end
+  def self.read_file(format, stream_url)
+    file_io = File.open(stream_url)
+    format.on_read do |bytes|
+      print "r"
+      file_io.read(bytes)
     end
+  end
+
+  def self.read_stream(format, ip, port)
+    socket = UDPSocket.new
+    socket.buffer_size = 1024 * 1024 * 4
+    socket.read_buffering = true
+    puts "socket buffer size: #{socket.buffer_size} (#{socket.read_buffering?})"
+    socket.bind "0.0.0.0", port
+    socket.join_group(Socket::IPAddress.new(ip, port))
+
+    format.on_read do |bytes|
+      print "r"
+      bytes_read, client_addr = socket.receive(bytes)
+      bytes_read
+    end
+  end
+
+  describe FFmpeg do
+    Spec.before_each { File.delete?("./output.png") }
 
     it "decodes a frame of a video file" do
-      stream_url = "./test.mp4"
-      file_io = File.open(stream_url)
       format = Format.new
-      format.on_read do |bytes|
-        print "r"
-        file_io.read(bytes)
-      end
+
+      # ip = "239.0.0.2"
+      # port = 1234
+      # stream_url = "udp://#{ip}:#{port}"
+      # FFmpeg.read_stream(format, ip, port)
+
+      stream_url = "./test.mp4"
+      FFmpeg.read_file(format, stream_url)
+
       format.open(stream_url).stream_info
       stream_index = format.find_best_stream MediaType::Video
       puts "found stream index #{stream_index}"
@@ -72,6 +92,8 @@ module FFmpeg
           end
         end
       end
+
+      File.exists?("./output.png").should be_true
     end
   end
 end
