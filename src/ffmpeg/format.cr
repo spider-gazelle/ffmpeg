@@ -1,12 +1,13 @@
 require "../ffmpeg"
 
 class FFmpeg::Format
-  def initialize
+  def initialize(@buffer_size = 4 * 1024 * 1024)
     @context = LibAV::Format.alloc_context
     raise "failed to allocate context" if @context.null?
     @context_pointer = pointerof(@context)
   end
 
+  @buffer_size : Int32
   @context_pointer : Pointer(Pointer(LibAV::Format::Context))
   @context : Pointer(LibAV::Format::Context)
   getter! input : String
@@ -76,8 +77,8 @@ class FFmpeg::Format
     Parameters.new(@context.value.streams[stream_index].value.codecpar)
   end
 
-  # 4MB buffer
-  getter packet : Packet { Packet.new(4 * 1024 * 1024) }
+  # Lazy load the packet
+  getter packet : Packet { Packet.new(@buffer_size) }
 
   def read
     status = LibAV::Format.read_frame(@context, packet)

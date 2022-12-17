@@ -32,9 +32,6 @@ module FFmpeg
 
   LibAV::Codec.register_all
 
-  # NOTE:: Shouldn't need to do this once we move to non-blocking as
-  # crystal will have to handle the comms
-  LibAV::Format.network_init
-
-  Log.info { "Launching with libav v#{FFmpeg.version}" }
+  # crystal handles the comms so we don't need this
+  # LibAV::Format.network_init
 end

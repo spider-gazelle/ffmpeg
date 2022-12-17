@@ -1,6 +1,11 @@
 name: ffmpeg
 version: 0.1.0
 
+dependencies:
+  # we use stumpy to extract each pixels colour and draw bounding boxes
+  stumpy_core:
+    github: stumpycr/stumpy_core
+
 development_dependencies:
   # we use stumpy to extract each pixels colour and draw bounding boxes
   stumpy_png:
