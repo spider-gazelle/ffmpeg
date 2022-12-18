@@ -19,7 +19,33 @@ Primarily to extract video frames from streams and files for processing by AI.
 
 ## Usage
 
-See the specs for usage
+parsing a video file, outputs [StumpyCore Canvas](https://github.com/stumpycr/stumpy_core#stumpy_core)
+
+```crystal
+
+require "ffmpeg"
+
+video = Video::File.new("./test.mp4")
+video.each_frame do |frame, is_key_frame|
+   frame # => StumpyCore::Canvas
+end
+
+```
+
+also supports UDP streams (unicast or multicast)
+
+```crystal
+
+require "ffmpeg"
+
+video = Video::UDP.new("udp://239.0.0.2:1234")
+video.each_frame do |frame, is_key_frame|
+   frame # => StumpyCore::Canvas
+end
+
+```
+
+See the specs for more detailed usage
 
 ## Contributing
 

@@ -1,5 +1,6 @@
 require "stumpy_core"
 require "../ffmpeg"
+require "ipaddress"
 require "uri"
 
 abstract class FFmpeg::Video
@@ -9,7 +10,8 @@ abstract class FFmpeg::Video
 
   abstract def configure_read
   abstract def input : String
-  abstract def format : Format
+
+  getter format : Format = Format.new
 
   def close
     @io.close
@@ -54,38 +56,43 @@ abstract class FFmpeg::Video
               canvas.pixels[index] = StumpyCore::RGBA.new(r, g, b)
             end
 
-            yield canvas
+            yield canvas, frame.key_frame?
           end
         end
       end
     end
+  ensure
+    close
+    @format = Format.new
+    GC.collect
   end
 
   class File < Video
     def initialize(filename : String)
       @input = filename
-      @format = Format.new
       @io = ::File.open(filename)
     end
 
     getter input : String
-    getter format : Format
     @io : ::File
 
     def configure_read
       Log.trace { "configuring IO callback" }
+      @io = ::File.open(input) if closed?
       format.on_read { |bytes| @io.read(bytes) }
     end
   end
 
   class UDP < Video
+    MULTICASTRANGEV4 = IPAddress.new("224.0.0.0/4")
+    MULTICASTRANGEV6 = IPAddress.new("ff00::/8")
+
     def initialize(stream : String, read_buffer_size : Int = 1024 * 1024 * 4)
       uri = URI.parse stream
-      @host = uri.host
+      @host = uri.host.as(String)
       @port = uri.port || 554
 
       @input = stream
-      @format = Format.new
       @io = UDPSocket.new
       @io.buffer_size = read_buffer_size
       @io.read_buffering = true
@@ -93,18 +100,27 @@ abstract class FFmpeg::Video
     end
 
     getter input : String
-    getter format : Format
     @io : UDPSocket
     getter host : String
     getter port : Int32
 
     def configure_read
       Log.trace { "connecting to stream" }
+      if closed?
+        read_buffer_size = @io.buffer_size
+        @io = UDPSocket.new
+        @io.buffer_size = read_buffer_size
+        @io.read_buffering = true
+        @io.read_timeout = 2.seconds
+      end
+
+      socket = @io
+
       begin
-        ipaddr = IPAddress.new(@host, @port)
+        ipaddr = IPAddress.new(host)
         if ipaddr.is_a?(IPAddress::IPv4) ? MULTICASTRANGEV4.includes?(ipaddr) : MULTICASTRANGEV6.includes?(ipaddr)
           socket.bind "0.0.0.0", @port
-          socket.join_group(ipaddr)
+          socket.join_group(Socket::IPAddress.new(@host, @port))
         else
           socket.connect(@host, @port)
         end
@@ -115,7 +131,7 @@ abstract class FFmpeg::Video
 
       Log.trace { "configuring IO callback" }
       format.on_read do |bytes|
-        bytes_read, client_addr = socket.receive(bytes)
+        bytes_read, _client_addr = socket.receive(bytes)
         bytes_read
       end
     end

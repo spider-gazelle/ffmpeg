@@ -64,7 +64,7 @@ class FFmpeg::Codec
 
   def decode(packet : Packet) : Frame?
     frame_finished = 0
-    bytes_allocated = LibAV::Codec.decode_video(@context, frame, pointerof(frame_finished), packet)
+    _bytes_allocated = LibAV::Codec.decode_video(@context, frame, pointerof(frame_finished), packet)
     frame if frame_finished != 0
   end
 

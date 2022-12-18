@@ -5,7 +5,10 @@ require "stumpy_png"
 
 module FFmpeg
   describe FFmpeg::Video do
-    Spec.before_each { File.delete?("./output.png") }
+    Spec.before_each do
+      File.delete?("./output.png")
+      File.delete?("./output2.png")
+    end
 
     it "uses helpers to decode video frames" do
       video = Video::File.new("./test.mp4")
@@ -20,8 +23,35 @@ module FFmpeg
         break
       end
 
-      video.close
       File.exists?("./output.png").should be_true
+
+      # tests we can re-use the helper
+      write_frame = 200
+      frame_count = 0
+      video.each_frame do |frame|
+        frame_count += 1
+        next if frame_count < write_frame
+        puts "writing output"
+        StumpyPNG.write(frame, "./output2.png")
+        break
+      end
+
+      File.exists?("./output2.png").should be_true
+    end
+
+    it "works with streams" do
+      pending!("start a stream to test")
+      video = Video::UDP.new("udp://239.0.0.2:1234")
+      write_frame = 60
+      frame_count = 0
+      video.each_frame do |frame|
+        frame_count += 1
+        next if frame_count < write_frame
+        puts "writing output"
+        StumpyPNG.write(frame, "./output3.png")
+        break
+      end
+      File.exists?("./output3.png").should be_true
     end
   end
 end

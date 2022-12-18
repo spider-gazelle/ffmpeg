@@ -3,11 +3,8 @@
 /bin/
 /.shards/
 *.dwarf
-
-# Libraries don't need dependency lock
-# Dependencies will be locked in applications that use them
 /shard.lock
 test.mp4
-
-
 output.png
+output2.png
+output3.png

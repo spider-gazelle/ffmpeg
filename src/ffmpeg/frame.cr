@@ -36,7 +36,7 @@ class FFmpeg::Frame
     @frame.value.format
   end
 
-  def key_frame : Bool
+  def key_frame? : Bool
     @frame.value.key_frame != 0
   end
 

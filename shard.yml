@@ -6,10 +6,17 @@ dependencies:
   stumpy_core:
     github: stumpycr/stumpy_core
 
+  # used to check if an IP address is a multicast address
+  ipaddress:
+    github: Sija/ipaddress.cr
+
 development_dependencies:
   # we use stumpy to extract each pixels colour and draw bounding boxes
   stumpy_png:
     github: stumpycr/stumpy_png
+
+  ameba:
+    github: veelenga/ameba
 
 authors:
   - Stephen von Takach <steve@place.tech>

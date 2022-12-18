@@ -22,7 +22,7 @@ module FFmpeg
 
     format.on_read do |bytes|
       print "r"
-      bytes_read, client_addr = socket.receive(bytes)
+      bytes_read, _client_addr = socket.receive(bytes)
       bytes_read
     end
   end
