@@ -10,6 +10,16 @@ module FFmpeg
       File.delete?("./output2.png")
     end
 
+    it "calculates scaled size properly" do
+      new_width, new_height = Video.scale_to_fit(800, 600, 300, 300)
+      new_height.should eq 300
+      new_width.should eq 400
+
+      new_width, new_height = Video.scale_to_fit(600, 800, 300, 300)
+      new_height.should eq 400
+      new_width.should eq 300
+    end
+
     it "uses helpers to decode video frames" do
       video = Video::File.new("./test.mp4")
 
