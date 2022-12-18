@@ -2,10 +2,7 @@ require "../ffmpeg"
 
 class FFmpeg::Codec
   def initialize
-    # NOTE:: removing this print causes alloc_context to fail??
-    # actually stummped on how to resolve this
-    print "\b"
-    context = LibAV::Codec.alloc_context
+    context = LibAV::Codec.alloc_context(Pointer(Void).null.as(LibAV::Codec::AVCodec))
     raise "failed to allocate context" if context.null?
     @context = context
     @context_pointer = pointerof(@context)

@@ -1,6 +1,7 @@
 require "stumpy_core"
 require "../ffmpeg"
 require "ipaddress"
+require "socket"
 require "uri"
 
 abstract class FFmpeg::Video

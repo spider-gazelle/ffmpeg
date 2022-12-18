@@ -81,24 +81,27 @@ module FFmpeg::LibAV
       convergence_duration : LibC::Long
     end
 
+    # https://ffmpeg4d.dpldocs.info/ffmpeg.libavcodec.avcodec.avcodec_open2.html
     fun open2 = avcodec_open2(
       avctx : Context*,
       codec : AVCodec,
       options : Void* # AVDictionary**
     ) : LibC::Int
 
+    # https://ffmpeg4d.dpldocs.info/ffmpeg.libavcodec.avcodec.avcodec_send_packet.html
     fun send_packet = avcodec_send_packet(
       avctx : Context*,
       avpkt : Packet*
     ) : LibC::Int
 
+    # https://ffmpeg4d.dpldocs.info/ffmpeg.libavcodec.avcodec.avcodec_receive_frame.html
     fun receive_frame = avcodec_receive_frame(
       avctx : Context*,
       frame : Util::AVFrame*
     ) : LibC::Int
 
     # Free the codec context and everything associated with it and write NULL to the provided pointer.
-    fun alloc_context = avcodec_alloc_context3 : Context*
+    fun alloc_context = avcodec_alloc_context3(codec : AVCodec) : Context*
     fun free_context = avcodec_free_context(avctx : Context**)
 
     fun alloc_parameters = avcodec_parameters_alloc : AVCodecParameters
