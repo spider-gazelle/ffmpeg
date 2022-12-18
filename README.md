@@ -1,5 +1,7 @@
 # ffmpeg libav bindings for crystal lang
 
+[![CI](https://github.com/spider-gazelle/ffmpeg/actions/workflows/ci.yml/badge.svg)](https://github.com/spider-gazelle/ffmpeg/actions/workflows/ci.yml)
+
 Primarily to extract video frames from streams and files for processing by AI.
 
 ## Installation

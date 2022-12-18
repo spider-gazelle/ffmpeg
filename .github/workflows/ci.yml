@@ -26,7 +26,7 @@ jobs:
       run: |
         apk add --update --no-cache ffmpeg-libs ffmpeg-dev
     - name: Install dependencies
-      run: shards install --ignore-crystal-version
+      run: shards install --ignore-crystal-version --skip-postinstall --skip-executables
     - name: Format
       run: crystal tool format --check
     - name: Run tests
