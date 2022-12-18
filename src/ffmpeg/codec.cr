@@ -63,9 +63,11 @@ class FFmpeg::Codec
   getter frame : Frame { Frame.new }
 
   def decode(packet : Packet) : Frame?
-    frame_finished = 0
-    _bytes_allocated = LibAV::Codec.decode_video(@context, frame, pointerof(frame_finished), packet)
-    frame if frame_finished != 0
+    success = LibAV::Codec.send_packet(@context, packet)
+    raise "failed to read packet with #{success}" if success < 0
+
+    frame_finished = LibAV::Codec.receive_frame(@context, frame)
+    frame if frame_finished == 0
   end
 
   def width

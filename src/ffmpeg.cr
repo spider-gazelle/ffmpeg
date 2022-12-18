@@ -29,9 +29,4 @@ module FFmpeg
     Lanczos       = 0x200
     BicubicSpline = 0x400
   end
-
-  LibAV::Codec.register_all
-
-  # crystal handles the comms so we don't need this
-  # LibAV::Format.network_init
 end

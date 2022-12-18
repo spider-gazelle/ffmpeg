@@ -6,7 +6,8 @@ module FFmpeg::LibAV
     fun configuration = avcodec_configuration : LibC::Char*
     fun version = avcodec_version : LibC::UInt
 
-    fun register_all = avcodec_register_all
+    # deprecated in ffmpeg 4: https://github.com/leandromoreira/ffmpeg-libav-tutorial/issues/29
+    # fun register_all = avcodec_register_all
 
     fun dump_format = av_dump_format(
       ic : Format::Context*,
@@ -86,11 +87,14 @@ module FFmpeg::LibAV
       options : Void* # AVDictionary**
     ) : LibC::Int
 
-    fun decode_video = avcodec_decode_video2(
+    fun send_packet = avcodec_send_packet(
       avctx : Context*,
-      picture : Util::AVFrame*,
-      got_picture_ptr : LibC::Int*,
       avpkt : Packet*
+    ) : LibC::Int
+
+    fun receive_frame = avcodec_receive_frame(
+      avctx : Context*,
+      frame : Util::AVFrame*
     ) : LibC::Int
 
     # Free the codec context and everything associated with it and write NULL to the provided pointer.
