@@ -47,6 +47,16 @@ end
 
 ```
 
+Frames can be scaled as they are processed.
+If the new resolution isn't in the same aspect ratio then the image is scaled to cover.
+That is both its height and width completely cover the source image and cropped either vertically or horizontally.
+
+```crystal
+video.each_frame(new_width, new_height) do |frame, is_key_frame|
+   frame # => StumpyCore::Canvas
+end
+```
+
 See the specs for more detailed usage
 
 ## Contributing
