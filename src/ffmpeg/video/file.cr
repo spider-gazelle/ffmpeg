@@ -1,8 +1,8 @@
 require "../video"
 
 class FFmpeg::Video::File < FFmpeg::Video
-  def initialize(filename : String)
-    @input = filename
+  def initialize(filename : String | Path)
+    @input = filename.to_s
     @io = ::File.open(filename)
   end
 

@@ -21,7 +21,7 @@ module FFmpeg
     end
 
     it "uses helpers to decode video frames" do
-      video = Video::File.new("./test.mp4")
+      video = Video.open(Path.new("./test.mp4"))
 
       write_frame = 60
       frame_count = 0
@@ -51,7 +51,7 @@ module FFmpeg
 
     it "works with streams" do
       pending!("start a stream to test")
-      video = Video::UDP.new("udp://239.0.0.2:1234")
+      video = Video.open URI.parse("udp://239.0.0.2:1234")
       write_frame = 60
       frame_count = 0
       video.each_frame do |frame|

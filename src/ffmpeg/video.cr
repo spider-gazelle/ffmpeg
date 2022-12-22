@@ -9,6 +9,20 @@ abstract class FFmpeg::Video
   abstract def configure_read
   abstract def input : String
 
+  def self.open(input : Path | URI)
+    case input
+    in Path
+      Video::File.new(input)
+    in URI
+      case input.scheme.try(&.downcase)
+      when "udp"
+        Video::UDP.new(input)
+      else
+        raise ArgumentError.new("input URI scheme '#{input.scheme}' not supported")
+      end
+    end
+  end
+
   getter format : Format = Format.new
 
   def close
@@ -69,11 +83,8 @@ abstract class FFmpeg::Video
               canvas.pixels[index] = StumpyCore::RGBA.new(r, g, b)
             end
 
-            if requires_cropping
-              yield Video.crop(canvas, desired_width, desired_height), frame.key_frame?
-            else
-              yield canvas, frame.key_frame?
-            end
+            output = requires_cropping ? Video.crop(canvas, desired_width, desired_height) : canvas
+            yield output, frame.key_frame?
           end
         end
       end

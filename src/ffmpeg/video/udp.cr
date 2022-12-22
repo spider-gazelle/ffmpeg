@@ -7,12 +7,12 @@ class FFmpeg::Video::UDP < FFmpeg::Video
   MULTICASTRANGEV4 = IPAddress.new("224.0.0.0/4")
   MULTICASTRANGEV6 = IPAddress.new("ff00::/8")
 
-  def initialize(stream : String, read_buffer_size : Int = 1024 * 1024 * 4)
-    uri = URI.parse stream
+  def initialize(stream : String | URI, read_buffer_size : Int = 1024 * 1024 * 4)
+    uri = stream.is_a?(URI) ? stream : URI.parse(stream)
     @host = uri.host.as(String)
     @port = uri.port || 554
 
-    @input = stream
+    @input = uri.to_s
     @io = UDPSocket.new
     @io.buffer_size = read_buffer_size
     @io.read_buffering = true
