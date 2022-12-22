@@ -1,5 +1,5 @@
 name: ffmpeg
-version: 0.4.0
+version: 0.4.1
 
 dependencies:
   # we use stumpy to extract each pixels colour and draw bounding boxes

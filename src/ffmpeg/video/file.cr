@@ -9,6 +9,14 @@ class FFmpeg::Video::File < FFmpeg::Video
   getter input : String
   @io : ::File
 
+  def close : Nil
+    @io.close
+  end
+
+  def closed? : Bool
+    @io.closed?
+  end
+
   def configure_read
     Log.trace { "configuring IO callback" }
     @io = ::File.open(input) if closed?

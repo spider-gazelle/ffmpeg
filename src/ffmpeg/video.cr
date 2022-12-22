@@ -8,6 +8,8 @@ abstract class FFmpeg::Video
 
   abstract def configure_read
   abstract def input : String
+  abstract def close : Nil
+  abstract def closed? : Bool
 
   def self.open(input : Path | URI)
     case input
@@ -24,14 +26,6 @@ abstract class FFmpeg::Video
   end
 
   getter format : Format = Format.new
-
-  def close
-    @io.close
-  end
-
-  def closed?
-    @io.closed?
-  end
 
   # Grab each frame and convert it to a StumpyCore::Canvas for simple manipulation
   # this can also scale the image to a preferred resolution

@@ -24,6 +24,14 @@ class FFmpeg::Video::UDP < FFmpeg::Video
   getter host : String
   getter port : Int32
 
+  def close : Nil
+    @io.close
+  end
+
+  def closed? : Bool
+    @io.closed?
+  end
+
   def configure_read
     Log.trace { "connecting to stream" }
     if closed?
