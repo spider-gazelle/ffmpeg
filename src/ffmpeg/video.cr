@@ -3,7 +3,7 @@ require "../ffmpeg"
 
 abstract class FFmpeg::Video
   def finalize
-    @io.close
+    close
   end
 
   abstract def configure_read
@@ -61,7 +61,7 @@ abstract class FFmpeg::Video
     canvas = StumpyCore::Canvas.new(output_width, output_height)
 
     Log.trace { "extracting frames" }
-    while !@io.closed?
+    while !closed?
       format.read do |packet|
         if packet.stream_index == stream_index
           if frame = codec.decode(packet)
