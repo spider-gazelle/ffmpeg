@@ -48,6 +48,7 @@ class FFmpeg::Video::UDP < FFmpeg::Video
       ipaddr = IPAddress.new(host)
       if ipaddr.is_a?(IPAddress::IPv4) ? MULTICASTRANGEV4.includes?(ipaddr) : MULTICASTRANGEV6.includes?(ipaddr)
         socket.reuse_address = true
+        socket.reuse_port = true
         socket.bind "0.0.0.0", @port
         socket.join_group(Socket::IPAddress.new(@host, @port))
       else
