@@ -56,9 +56,15 @@ abstract class FFmpeg::Video
     requires_cropping = desired_width != output_width || desired_height != output_height
 
     Log.trace { "configuring scaler, input: #{codec.width}x#{codec.height} @ #{codec.pixel_format}, output: #{output_width}x#{output_height} @ rgb24" }
-    rgb_frame = Frame.new(output_width, output_height, 3)
-    scaler = SWScale.new(codec, output_width, output_height, :rgb24, scaling_method)
+    rgb_frame = Frame.new(output_width, output_height, 6)
+    scaler = SWScale.new(codec, output_width, output_height, :rgb48Le, scaling_method)
     canvas = StumpyCore::Canvas.new(output_width, output_height)
+
+    # create a view into the frame buffer for simplified data extraction
+    # works on the assumption that the code is running on a LE system
+    pixel_components = output_width * output_height * 3
+    pointer = Pointer(UInt16).new(rgb_frame.buffer.to_unsafe.address)
+    frame_buffer = Slice.new(pointer, pixel_components)
 
     Log.trace { "extracting frames" }
     while !closed?
@@ -68,12 +74,11 @@ abstract class FFmpeg::Video
             scaler.scale(frame, rgb_frame)
 
             # copy frame into a stumpy canvas
-            frame_buffer = rgb_frame.buffer
-            (0...canvas.pixels.size).each do |index|
+            canvas.pixels.size.times do |index|
               idx = index * 3
-              r = ((frame_buffer[idx] / UInt8::MAX) * UInt16::MAX).round.to_u16
-              g = ((frame_buffer[idx + 1] / UInt8::MAX) * UInt16::MAX).round.to_u16
-              b = ((frame_buffer[idx + 2] / UInt8::MAX) * UInt16::MAX).round.to_u16
+              r = frame_buffer[idx]
+              g = frame_buffer[idx + 1]
+              b = frame_buffer[idx + 2]
               canvas.pixels[index] = StumpyCore::RGBA.new(r, g, b)
             end
 
@@ -120,37 +125,14 @@ abstract class FFmpeg::Video
   def self.crop(canvas, desired_width, desired_height)
     cropped = StumpyCore::Canvas.new(desired_width, desired_height)
 
-    if desired_height == canvas.height
-      pillarbox = true
-      letterbox = false
-      skip = (canvas.width - desired_width) // 2
-    else
-      pillarbox = false
-      letterbox = true
-      skip = (canvas.height - desired_height) // 2
-    end
+    x_start = {(canvas.width - desired_width) // 2, 0}.max
+    y_start = {(canvas.height - desired_height) // 2, 0}.max
 
-    row = -1
-    canvas.each_row do |pixels|
-      row += 1
-      row_i = row
-      if letterbox
-        next if row < skip
-        break if row == desired_height + skip
-        row_i = row - skip
-      end
-
-      col = -1
-      pixels.each do |rgba|
-        col += 1
-        col_i = col
-        if pillarbox
-          next if col < skip
-          break if col == desired_width + skip
-          col_i = col - skip
-        end
-
-        cropped.pixels[(row_i * desired_width) + col_i] = rgba
+    pixel = 0
+    y_start.upto(y_start + desired_height - 1) do |y|
+      x_start.upto(x_start + desired_width - 1) do |x|
+        cropped.pixels[pixel] = canvas.pixels[y * canvas.width + x]
+        pixel += 1
       end
     end
 
