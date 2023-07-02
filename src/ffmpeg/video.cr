@@ -27,13 +27,7 @@ abstract class FFmpeg::Video
 
   getter format : Format = Format.new
 
-  # Grab each frame and convert it to a StumpyCore::Canvas for simple manipulation
-  # this can also scale the image to a preferred resolution
-  def each_frame(
-    output_width : Int? = nil,
-    output_height : Int? = nil,
-    scaling_method : ScalingAlgorithm = ScalingAlgorithm::Bicublin
-  )
+  protected def configure(output_width, output_height, scaling_method)
     configure_read
 
     Log.trace { "opening UDP stream input" }
@@ -59,6 +53,7 @@ abstract class FFmpeg::Video
     rgb_frame = Frame.new(output_width, output_height, 6)
     scaler = SWScale.new(codec, output_width, output_height, :rgb48Le, scaling_method)
     canvas = StumpyCore::Canvas.new(output_width, output_height)
+    cropped = StumpyCore::Canvas.new(desired_width, desired_height)
 
     # create a view into the frame buffer for simplified data extraction
     # works on the assumption that the code is running on a LE system
@@ -66,28 +61,75 @@ abstract class FFmpeg::Video
     pointer = Pointer(UInt16).new(rgb_frame.buffer.to_unsafe.address)
     frame_buffer = Slice.new(pointer, pixel_components)
 
+    {codec, scaler, rgb_frame, frame_buffer, stream_index, canvas, cropped, requires_cropping}
+  end
+
+  protected def scale_and_extract(scaler, frame, rgb_frame, canvas, frame_buffer, requires_cropping, cropped)
+    scaler.scale(frame, rgb_frame)
+
+    # copy frame into a stumpy canvas
+    canvas.pixels.size.times do |index|
+      idx = index * 3
+      r = frame_buffer[idx]
+      g = frame_buffer[idx + 1]
+      b = frame_buffer[idx + 2]
+      canvas.pixels[index] = StumpyCore::RGBA.new(r, g, b)
+    end
+
+    output = requires_cropping ? Video.crop(canvas, cropped) : canvas
+    {output, frame.key_frame?}
+  end
+
+  # Grab each frame and convert it to a StumpyCore::Canvas for simple manipulation
+  # this can also scale the image to a preferred resolution
+  def each_frame(
+    output_width : Int? = nil,
+    output_height : Int? = nil,
+    scaling_method : ScalingAlgorithm = ScalingAlgorithm::Bicublin
+  )
+    codec, scaler, rgb_frame, frame_buffer, stream_index, canvas, cropped, requires_cropping = configure(output_width, output_height, scaling_method)
+
     Log.trace { "extracting frames" }
     while !closed?
       format.read do |packet|
         if packet.stream_index == stream_index
           if frame = codec.decode(packet)
-            scaler.scale(frame, rgb_frame)
-
-            # copy frame into a stumpy canvas
-            canvas.pixels.size.times do |index|
-              idx = index * 3
-              r = frame_buffer[idx]
-              g = frame_buffer[idx + 1]
-              b = frame_buffer[idx + 2]
-              canvas.pixels[index] = StumpyCore::RGBA.new(r, g, b)
-            end
-
-            output = requires_cropping ? Video.crop(canvas, desired_width, desired_height) : canvas
-            yield output, frame.key_frame?
+            yield *scale_and_extract(scaler, frame, rgb_frame, canvas, frame_buffer, requires_cropping, cropped)
           end
         end
       end
     end
+  ensure
+    close
+    @format = Format.new
+    GC.collect
+  end
+
+  def async_frames(
+    ready : Channel(Nil),
+    data : Channel(Tuple(StumpyCore::Canvas, Bool)),
+    output_width : Int? = nil,
+    output_height : Int? = nil,
+    scaling_method : ScalingAlgorithm = ScalingAlgorithm::Bicublin
+  )
+    codec, scaler, rgb_frame, frame_buffer, stream_index, canvas, cropped, requires_cropping = configure(output_width, output_height, scaling_method)
+
+    Log.trace { "extracting frames" }
+    while !closed?
+      format.read do |packet|
+        if packet.stream_index == stream_index
+          if frame = codec.decode(packet)
+            select
+            when ready.receive
+              data.send scale_and_extract(scaler, frame, rgb_frame, canvas, frame_buffer, requires_cropping, cropped)
+            else
+              Log.trace { "skipping frame" }
+            end
+          end
+        end
+      end
+    end
+  rescue Channel::ClosedError
   ensure
     close
     @format = Format.new
@@ -122,9 +164,9 @@ abstract class FFmpeg::Video
 
   # one of desired_width or desired_height will match the canvas width or height
   # so we only have to crop width or height
-  def self.crop(canvas, desired_width, desired_height)
-    cropped = StumpyCore::Canvas.new(desired_width, desired_height)
-
+  def self.crop(canvas : StumpyCore::Canvas, cropped : StumpyCore::Canvas)
+    desired_width = cropped.width
+    desired_height = cropped.height
     x_start = {(canvas.width - desired_width) // 2, 0}.max
     y_start = {(canvas.height - desired_height) // 2, 0}.max
 

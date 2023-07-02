@@ -49,6 +49,34 @@ module FFmpeg
       File.exists?("./output2.png").should be_true
     end
 
+    it "skips frames while processing images" do
+      video = Video.open(Path.new("./test.mp4"))
+
+      ready = Channel(Nil).new(1)
+      data = Channel(Tuple(StumpyCore::Canvas, Bool)).new(1)
+
+      spawn do
+        write_frame = 60
+        frame_count = 0
+
+        loop do
+          ready.send nil
+          frame, key_frame = data.receive
+          frame_count += 1
+          next if frame_count < write_frame
+          puts "writing async output"
+          StumpyPNG.write(frame, "./async_output.png")
+          break
+        end
+
+        ready.close
+        data.close
+      end
+
+      video.async_frames(ready, data)
+      File.exists?("./async_output.png").should be_true
+    end
+
     it "works with streams" do
       pending!("start a stream to test")
       video = Video.open URI.parse("udp://239.0.0.2:1234")
