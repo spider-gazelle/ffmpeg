@@ -131,6 +131,8 @@ abstract class FFmpeg::Video
     end
   rescue Channel::ClosedError
   ensure
+    ready.close
+    data.close
     close
     @format = Format.new
     GC.collect
