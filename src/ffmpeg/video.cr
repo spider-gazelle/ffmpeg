@@ -1,5 +1,6 @@
 require "stumpy_core"
 require "../ffmpeg"
+require "tasker"
 
 abstract class FFmpeg::Video
   def finalize
@@ -85,7 +86,8 @@ abstract class FFmpeg::Video
   def each_frame(
     output_width : Int? = nil,
     output_height : Int? = nil,
-    scaling_method : ScalingAlgorithm = ScalingAlgorithm::Bicublin
+    scaling_method : ScalingAlgorithm = ScalingAlgorithm::Bicublin,
+    &
   )
     codec, scaler, rgb_frame, frame_buffer, stream_index, canvas, cropped, requires_cropping = configure(output_width, output_height, scaling_method)
 
@@ -105,9 +107,8 @@ abstract class FFmpeg::Video
     GC.collect
   end
 
-  def async_frames(
-    ready : Channel(Nil),
-    data : Channel(Tuple(StumpyCore::Canvas, Bool)),
+  def frame_pipeline(
+    pipeline : Tasker::Pipeline,
     output_width : Int? = nil,
     output_height : Int? = nil,
     scaling_method : ScalingAlgorithm = ScalingAlgorithm::Bicublin
@@ -115,24 +116,19 @@ abstract class FFmpeg::Video
     codec, scaler, rgb_frame, frame_buffer, stream_index, canvas, cropped, requires_cropping = configure(output_width, output_height, scaling_method)
 
     Log.trace { "extracting frames" }
-    while !closed?
+    while !closed? && !pipeline.closed?
       format.read do |packet|
         if packet.stream_index == stream_index
-          if frame = codec.decode(packet)
-            select
-            when ready.receive
-              data.send scale_and_extract(scaler, frame, rgb_frame, canvas, frame_buffer, requires_cropping, cropped)
-            else
-              Log.trace { "skipping frame" }
-            end
+          if (frame = codec.decode(packet)) && pipeline.idle?
+            pipeline.process scale_and_extract(scaler, frame, rgb_frame, canvas, frame_buffer, requires_cropping, cropped)
+          else
+            Log.trace { "skipping frame" }
           end
         end
       end
     end
   rescue Channel::ClosedError
   ensure
-    ready.close
-    data.close
     close
     @format = Format.new
     GC.collect

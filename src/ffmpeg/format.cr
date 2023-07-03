@@ -80,7 +80,7 @@ class FFmpeg::Format
   # Lazy load the packet
   getter packet : Packet { Packet.new(@buffer_size) }
 
-  def read
+  def read(&)
     status = LibAV::Format.read_frame(@context, packet)
     raise "failed to read a frame with #{status}" if status < 0
     begin

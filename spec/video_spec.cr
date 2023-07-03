@@ -8,6 +8,7 @@ module FFmpeg
     Spec.before_each do
       File.delete?("./output.png")
       File.delete?("./output2.png")
+      File.delete?("./async_output.png")
     end
 
     it "calculates scaled size properly" do
@@ -52,28 +53,21 @@ module FFmpeg
     it "skips frames while processing images" do
       video = Video.open(Path.new("./test.mp4"))
 
-      ready = Channel(Nil).new(1)
-      data = Channel(Tuple(StumpyCore::Canvas, Bool)).new(1)
+      write_frame = 60
+      frame_count = 0
 
-      spawn do
-        write_frame = 60
-        frame_count = 0
+      pipeline = nil
+      pipeline = Tasker::Pipeline(Tuple(StumpyCore::Canvas, Bool), StumpyCore::Canvas).new("processor") { |(frame, _key_frame)|
+        # process frames here
+        frame_count += 1
+        next frame if frame_count < write_frame
+        puts "writing async output"
+        StumpyPNG.write(frame, "./async_output.png")
+        pipeline.try &.close
+        frame
+      }
 
-        loop do
-          ready.send nil
-          frame, key_frame = data.receive
-          frame_count += 1
-          next if frame_count < write_frame
-          puts "writing async output"
-          StumpyPNG.write(frame, "./async_output.png")
-          break
-        end
-
-        ready.close
-        data.close
-      end
-
-      video.async_frames(ready, data)
+      video.frame_pipeline(pipeline.as(Tasker::Pipeline(Tuple(StumpyCore::Canvas, Bool), StumpyCore::Canvas)))
       File.exists?("./async_output.png").should be_true
     end
 
