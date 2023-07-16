@@ -108,7 +108,7 @@ abstract class FFmpeg::Video
   end
 
   def frame_pipeline(
-    pipeline : Tasker::Pipeline,
+    pipeline : Tasker::Processor(Tuple(StumpyCore::Canvas, Bool)),
     output_width : Int? = nil,
     output_height : Int? = nil,
     scaling_method : ScalingAlgorithm = ScalingAlgorithm::Bicublin
@@ -121,8 +121,6 @@ abstract class FFmpeg::Video
         if packet.stream_index == stream_index
           if (frame = codec.decode(packet)) && pipeline.idle?
             pipeline.process scale_and_extract(scaler, frame, rgb_frame, canvas, frame_buffer, requires_cropping, cropped)
-          else
-            Log.trace { "skipping frame" }
           end
         end
       end
