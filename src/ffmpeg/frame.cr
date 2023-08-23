@@ -7,6 +7,7 @@ class FFmpeg::Frame
     @frame_pointer = pointerof(@frame)
   end
 
+  @[Deprecated("specify pixel format instead of byte size")]
   def self.new(width : Int, height : Int, pixel_bytes : Int)
     frame = self.new
     frame.allocate_buffer(width, height, pixel_bytes)
@@ -45,6 +46,7 @@ class FFmpeg::Frame
     @frame.value.key_frame != 0
   end
 
+  @[Deprecated("specify pixel format instead of byte size")]
   def allocate_buffer(width : Int, height : Int, pixel_bytes : Int)
     num_pixels = width * height
     line_size = width * pixel_bytes

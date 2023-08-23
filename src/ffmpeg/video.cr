@@ -51,7 +51,7 @@ abstract class FFmpeg::Video
     requires_cropping = desired_width != output_width || desired_height != output_height
 
     Log.trace { "configuring scaler, input: #{codec.width}x#{codec.height} @ #{codec.pixel_format}, output: #{output_width}x#{output_height} @ rgb24" }
-    rgb_frame = Frame.new(output_width, output_height, 6)
+    rgb_frame = Frame.new(output_width, output_height, :rgb48Le)
     scaler = SWScale.new(codec, output_width, output_height, :rgb48Le, scaling_method)
     canvas = StumpyCore::Canvas.new(output_width, output_height)
     cropped = StumpyCore::Canvas.new(desired_width, desired_height)

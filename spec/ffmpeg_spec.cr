@@ -53,7 +53,7 @@ module FFmpeg
       codec.open
       puts "opened video stream"
 
-      rgb_frame = Frame.new(codec.width, codec.height, 3)
+      rgb_frame = Frame.new(codec.width, codec.height, :rgb24)
       scaler = SWScale.new(codec, output_format: :rgb24, scaling_method: :bicublin)
       puts "prepared scaler, #{codec.width}x#{codec.height} @ #{codec.pixel_format}"
 
