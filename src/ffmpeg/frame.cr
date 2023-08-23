@@ -12,9 +12,9 @@ class FFmpeg::Frame
     frame.allocate_buffer(width, height, pixel_bytes)
   end
 
-  def self.new(width : Int, height : Int, pixel_format : LibAV::PixelFormat, align : Int = 1)
+  def self.new(width : Int, height : Int, pixel_format : LibAV::PixelFormat, align : Int = 1, buffer : Bytes? = nil)
     frame = self.new
-    frame.allocate_buffer(width, height, pixel_format, align)
+    frame.allocate_buffer(width, height, pixel_format, align, buffer)
   end
 
   @frame_pointer : Pointer(Pointer(LibAV::Util::AVFrame))
