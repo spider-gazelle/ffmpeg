@@ -18,6 +18,8 @@ module FFmpeg::LibAV
 
     fun version_info = av_version_info : LibC::Char*
     fun frame_alloc = av_frame_alloc : AVFrame*
+    fun frame_clone = av_frame_clone(frame : AVFrame*) : AVFrame*
+    fun frame_copy = av_frame_copy(dst : AVFrame*, src : AVFrame*) : LibC::Int
     fun frame_free = av_frame_free(frame : AVFrame**)
     fun image_buffer_size = av_image_get_buffer_size(pix_fmt : PixelFormat, width : LibC::Int, height : LibC::Int, align : LibC::Int) : LibC::Int
     fun image_fill_linesizes = av_image_fill_linesizes(linesizes : LibC::Int*, pix_fmt : PixelFormat, width : LibC::Int) : LibC::Int

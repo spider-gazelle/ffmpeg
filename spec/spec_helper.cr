@@ -1,5 +1,6 @@
 require "spec"
 require "http/client"
+require "stumpy_resize"
 require "../src/ffmpeg"
 
 Spec.before_suite do

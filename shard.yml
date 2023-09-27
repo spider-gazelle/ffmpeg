@@ -20,6 +20,9 @@ development_dependencies:
   stumpy_png:
     github: stumpycr/stumpy_png
 
+  stumpy_resize:
+    github: spider-gazelle/stumpy_resize
+
   ameba:
     github: veelenga/ameba
 
