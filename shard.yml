@@ -1,5 +1,5 @@
 name: ffmpeg
-version: 0.7.2
+version: 1.0.0
 
 dependencies:
   # we use stumpy to extract each pixels colour and draw bounding boxes
@@ -9,11 +9,6 @@ dependencies:
   # used to check if an IP address is a multicast address
   ipaddress:
     github: Sija/ipaddress.cr
-
-  # for async frame processing
-  tasker:
-    github: spider-gazelle/tasker
-    version: ~> 2.1
 
 development_dependencies:
   # we use stumpy to extract each pixels colour and draw bounding boxes

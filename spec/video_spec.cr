@@ -5,20 +5,11 @@ require "stumpy_png"
 
 module FFmpeg
   describe FFmpeg::Video do
-    Spec.before_each do
+    before_all do
       File.delete?("./output.png")
       File.delete?("./output2.png")
-      File.delete?("./async_output.png")
-    end
-
-    it "calculates scaled size properly" do
-      new_width, new_height = Video.scale_to_fit(800, 600, 300, 300)
-      new_height.should eq 300
-      new_width.should eq 400
-
-      new_width, new_height = Video.scale_to_fit(600, 800, 300, 300)
-      new_height.should eq 400
-      new_width.should eq 300
+      File.delete?("./output3.png")
+      File.delete?("./output4.png")
     end
 
     it "uses helpers to decode video frames" do
@@ -30,7 +21,7 @@ module FFmpeg
         frame_count += 1
         next if frame_count < write_frame
         puts "writing output"
-        StumpyPNG.write(frame, "./output.png")
+        StumpyPNG.write(frame.to_canvas, "./output.png")
         break
       end
 
@@ -43,32 +34,11 @@ module FFmpeg
         frame_count += 1
         next if frame_count < write_frame
         puts "writing output"
-        StumpyPNG.write(frame, "./output2.png")
+        StumpyPNG.write(frame.to_canvas, "./output2.png")
         break
       end
 
       File.exists?("./output2.png").should be_true
-    end
-
-    it "skips frames while processing images" do
-      video = Video.open(Path.new("./test.mp4"))
-
-      write_frame = 60
-      frame_count = 0
-
-      pipeline = nil
-      pipeline = Tasker::Pipeline(Tuple(StumpyCore::Canvas, Bool), StumpyCore::Canvas).new("processor") { |(frame, _key_frame)|
-        # process frames here
-        frame_count += 1
-        next frame if frame_count < write_frame
-        puts "writing async output"
-        StumpyPNG.write(frame, "./async_output.png")
-        pipeline.try &.close
-        frame
-      }
-
-      video.frame_pipeline(pipeline.as(Tasker::Pipeline(Tuple(StumpyCore::Canvas, Bool), StumpyCore::Canvas)))
-      File.exists?("./async_output.png").should be_true
     end
 
     it "works with streams" do
@@ -80,10 +50,43 @@ module FFmpeg
         frame_count += 1
         next if frame_count < write_frame
         puts "writing output"
-        StumpyPNG.write(frame, "./output3.png")
+        StumpyPNG.write(frame.to_canvas, "./output3.png")
         break
       end
       File.exists?("./output3.png").should be_true
+    end
+
+    it "works with scaling frames" do
+      video = Video.open(Path.new("./test.mp4"))
+
+      # the scaler context
+      scaler = uninitialized FFmpeg::SWScale
+
+      # scaled frame we'll use for storing the scaling output
+      scaled_frame = uninitialized FFmpeg::Frame
+
+      video.on_codec do |codec|
+        # scale by 50%
+        width = codec.width // 2
+        height = codec.height // 2
+        scaler = FFmpeg::SWScale.new(codec, width, height, codec.pixel_format)
+        scaled_frame = FFmpeg::Frame.new width, height, codec.pixel_format
+      end
+
+      write_frame = 60
+      frame_count = 0
+      video.each_frame do |frame|
+        frame_count += 1
+        next if frame_count < write_frame
+
+        scaler.scale frame, scaled_frame
+
+        puts "writing output"
+        StumpyPNG.write(scaled_frame.to_canvas, "./output4.png")
+        break
+      end
+
+      File.exists?("./output4.png").should be_true
     end
   end
 end

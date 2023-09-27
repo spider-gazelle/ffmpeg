@@ -29,7 +29,8 @@ require "ffmpeg"
 
 video = Video::File.new("./test.mp4")
 video.each_frame do |frame, is_key_frame|
-   frame # => StumpyCore::Canvas
+  frame           # => FFmpeg::Frame
+  frame.to_canvas # => StumpyCore::Canvas
 end
 
 ```
@@ -42,19 +43,41 @@ require "ffmpeg"
 
 video = Video::UDP.new("udp://239.0.0.2:1234")
 video.each_frame do |frame, is_key_frame|
-   frame # => StumpyCore::Canvas
+  frame           # => FFmpeg::Frame
+  frame.to_canvas # => StumpyCore::Canvas
 end
 
 ```
 
-Frames can be scaled as they are processed.
-If the new resolution isn't in the same aspect ratio then the image is scaled to cover.
-That is both its height and width completely cover the source image and cropped either vertically or horizontally.
+You can also scale the frames
 
 ```crystal
-video.each_frame(new_width, new_height) do |frame, is_key_frame|
-   frame # => StumpyCore::Canvas
+
+require "ffmpeg"
+
+video = Video::File.new("./test.mp4")
+
+# the scaler context
+scaler = uninitialized FFmpeg::SWScale
+
+# scaled frame we'll use for storing the scaling output
+scaled_frame = uninitialized FFmpeg::Frame
+
+video.on_codec do |codec|
+  # scale by 50%
+  width = codec.width // 2
+  height = codec.height // 2
+  scaler = FFmpeg::SWScale.new(codec, width, height, codec.pixel_format)
+  scaled_frame = FFmpeg::Frame.new width, height, codec.pixel_format
 end
+
+video.each_frame do |frame, is_key_frame|
+  scaler.scale frame, scaled_frame
+
+  # do something with the scaled frame
+  scaled_frame.to_canvas
+end
+
 ```
 
 See the specs for more detailed usage
