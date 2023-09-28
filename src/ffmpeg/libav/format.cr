@@ -52,6 +52,15 @@ module FFmpeg::LibAV
       ctx_flags : LibC::Int
       nb_streams : LibC::UInt
       streams : AVStream**
+      url : UInt8*
+      start_time : LibC::Int64T
+      duration : LibC::Int64T
+      bit_rate : LibC::Int64T
+      packet_size : LibC::UInt
+      max_delay : LibC::Int
+      flags : LibC::Int
+      probesize : LibC::Int64T
+      max_analyze_duration : LibC::Int64T
     end
 
     struct AVStream

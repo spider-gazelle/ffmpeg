@@ -28,7 +28,8 @@ parsing a video file, outputs [StumpyCore Canvas](https://github.com/stumpycr/st
 require "ffmpeg"
 
 video = Video::File.new("./test.mp4")
-video.each_frame do |frame, is_key_frame|
+video.each_frame do |frame|
+  puts "key frame? #{frame.key_frame?}"
   frame           # => FFmpeg::Frame
   frame.to_canvas # => StumpyCore::Canvas
 end
@@ -42,7 +43,7 @@ also supports UDP streams (unicast or multicast)
 require "ffmpeg"
 
 video = Video::UDP.new("udp://239.0.0.2:1234")
-video.each_frame do |frame, is_key_frame|
+video.each_frame do |frame|
   frame           # => FFmpeg::Frame
   frame.to_canvas # => StumpyCore::Canvas
 end
@@ -71,7 +72,7 @@ video.on_codec do |codec|
   scaled_frame = FFmpeg::Frame.new width, height, codec.pixel_format
 end
 
-video.each_frame do |frame, is_key_frame|
+video.each_frame do |frame|
   scaler.scale frame, scaled_frame
 
   # do something with the scaled frame

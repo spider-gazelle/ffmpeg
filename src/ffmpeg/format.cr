@@ -4,6 +4,8 @@ class FFmpeg::Format
   def initialize(@buffer_size = 4 * 1024 * 1024)
     @context = LibAV::Format.alloc_context
     raise "failed to allocate context" if @context.null?
+    # this is the value ffmpeg uses by default 5seconds
+    @context.value.max_analyze_duration = 5000000
     @context_pointer = pointerof(@context)
   end
 
