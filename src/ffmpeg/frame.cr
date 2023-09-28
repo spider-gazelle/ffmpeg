@@ -96,6 +96,9 @@ class FFmpeg::Frame
     when .rgb24?, .bgr24?
       new_frame = FFmpeg::Frame.new(self)
       new_frame.quick_crop_rgb(top, left, bottom, right)
+    when .rgb48_le?, .rgb48_be?
+      new_frame = FFmpeg::Frame.new(self)
+      new_frame.quick_crop_rgb48(top, left, bottom, right)
     end
     new_frame
   end
@@ -118,6 +121,14 @@ class FFmpeg::Frame
     @frame.value.width = width - left - right
     # adjust pointers into buffer
     @frame.value.data[0] = @frame.value.data[0] + (top * @frame.value.linesize[0] + left * 3) # 3 bytes per pixel
+  end
+
+  protected def quick_crop_rgb48(top : Int32, left : Int32, bottom : Int32, right : Int32) : Nil
+    # adjust width and height
+    @frame.value.height = height - top - bottom
+    @frame.value.width = width - left - right
+    # adjust pointers into buffer
+    @frame.value.data[0] = @frame.value.data[0] + (top * @frame.value.linesize[0] + left * 6) # 6 bytes per pixel
   end
 
   # crop helper
