@@ -66,7 +66,9 @@ module FFmpeg
         break if finished
         format.read do |packet|
           if packet.stream_index == stream_index
-            if frame = codec.decode(packet)
+            frames = 0
+            codec.decode(packet) do |frame|
+              frames += 1
               print "."
               frame_count += 1
               next if frame_count < write_frame
@@ -86,9 +88,8 @@ module FFmpeg
               puts "writing output"
               StumpyPNG.write(canvas, "./output.png")
               finished = true
-            else
-              print "-"
             end
+            print "-" if frames == 0
           end
         end
       end

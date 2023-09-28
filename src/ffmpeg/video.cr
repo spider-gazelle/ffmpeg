@@ -33,7 +33,7 @@ abstract class FFmpeg::Video
   protected def configure
     configure_read
 
-    Log.trace { "opening UDP stream input" }
+    Log.trace { "opening #{self.class.to_s.split("::")[-1]} stream input" }
     format.open(input).stream_info
     stream_index = format.find_best_stream MediaType::Video
     # format.dump_format stream_index
@@ -57,7 +57,7 @@ abstract class FFmpeg::Video
     while !closed?
       format.read do |packet|
         if packet.stream_index == stream_index
-          if frame = codec.decode(packet)
+          codec.decode(packet) do |frame|
             yield frame
           end
         end

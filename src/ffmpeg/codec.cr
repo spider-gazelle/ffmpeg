@@ -59,12 +59,14 @@ class FFmpeg::Codec
 
   getter frame : Frame { Frame.new }
 
-  def decode(packet : Packet) : Frame?
+  def decode(packet : Packet, &)
     success = LibAV::Codec.send_packet(@context, packet)
     raise "failed to read packet with #{success}" if success < 0
 
-    frame_finished = LibAV::Codec.receive_frame(@context, frame)
-    frame if frame_finished == 0
+    loop do
+      break unless LibAV::Codec.receive_frame(@context, frame) == 0
+      yield frame
+    end
   end
 
   def width
