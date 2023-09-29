@@ -17,9 +17,27 @@ class FFmpeg::Video::File < FFmpeg::Video
     @io.closed?
   end
 
+  def seek(timestamp : Int64, style : SeekStyle = SeekStyle::Backward | SeekStyle::Any)
+    success = LibAV::Util.seek_frame(format, @stream_index, 0_i64, style.value)
+    raise "seek failed" if success < 0
+  end
+
   def configure_read
     Log.trace { "configuring IO callback" }
     @io = ::File.open(input) if closed?
     format.on_read { |bytes| @io.read(bytes) }
+    format.on_seek do |seek_offset, from_position|
+      case from_position
+      in .start?
+        @io.pos = seek_offset
+      in .current?
+        @io.pos += seek_offset
+      in .end?
+        @io.pos = @io.size + seek_offset
+      in .size?
+        @io.size
+      end
+    end
+    format.configure_io
   end
 end

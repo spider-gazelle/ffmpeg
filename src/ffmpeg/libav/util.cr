@@ -24,5 +24,7 @@ module FFmpeg::LibAV
     fun image_buffer_size = av_image_get_buffer_size(pix_fmt : PixelFormat, width : LibC::Int, height : LibC::Int, align : LibC::Int) : LibC::Int
     fun image_fill_linesizes = av_image_fill_linesizes(linesizes : LibC::Int*, pix_fmt : PixelFormat, width : LibC::Int) : LibC::Int
     fun image_fill_arrays = av_image_fill_arrays(dst_data : UInt8**, linesizes : LibC::Int*, img_buffer : UInt8*, pix_fmt : PixelFormat, width : LibC::Int, height : LibC::Int, align : LibC::Int) : LibC::Int
+
+    fun seek_frame = av_seek_frame(frame : Format::Context*, stream_index : LibC::Int, timestamp : LibC::Int64T, flags : LibC::Int) : LibC::Int
   end
 end

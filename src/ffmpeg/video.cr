@@ -26,8 +26,21 @@ abstract class FFmpeg::Video
 
   getter format : Format = Format.new
   getter codec : Codec? = nil
+  getter stream_index : Int32 = -1
 
   def on_codec(&@on_codec : Codec ->)
+  end
+
+  # if no flags then it seeks forward from the time requested
+  @[Flags]
+  enum SeekStyle
+    Backward = 1 # first keyframe before the time requested
+    Byte     = 2 # instead of a timestamp, jump to a particular byte
+    Any      = 4 # closest frame, not a keyframe
+    Frame    = 8 # instead of a timestamp, use frame numbering
+  end
+
+  def seek(timestamp : Int64, style : SeekStyle = SeekStyle::Backward | SeekStyle::Any)
   end
 
   protected def configure
@@ -50,8 +63,11 @@ abstract class FFmpeg::Video
   def each_frame(&)
     codec, stream_index = configure
 
+    @stream_index = stream_index
     @codec = codec
     @on_codec.try &.call(codec)
+
+    seek(0)
 
     Log.trace { "extracting frames" }
     while !closed?

@@ -37,7 +37,7 @@ module FFmpeg::LibAV
       opaque : Void*,
       read_packet : (Void*, UInt8*, LibC::Int -> LibC::Int),
       write_packet : Void*, # (Void*, UInt8*, LibC::Int -> LibC::Int),
-      seek : Void*          # (Void*, LibC::Long, LibC::Int -> LibC::Long)
+      seek : (Void*, LibC::Long, LibC::Int -> LibC::Long)
     ) : IOContext
 
     type IOContext = Void*

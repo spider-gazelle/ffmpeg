@@ -64,5 +64,6 @@ class FFmpeg::Video::UDP < FFmpeg::Video
       bytes_read, _client_addr = socket.receive(bytes)
       bytes_read
     end
+    format.configure_io
   end
 end
