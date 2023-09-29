@@ -33,6 +33,10 @@ class FFmpeg::Codec
     LibAV::Codec.free_context(@context_pointer) if @cleanup && !@context.null?
   end
 
+  def flush_buffers
+    LibAV::Codec.flush_buffers(@context)
+  end
+
   def parameters
     params = Parameters.new
     success = LibAV::Codec.parameters_from_context(params, @context)

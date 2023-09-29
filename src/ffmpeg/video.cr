@@ -40,7 +40,7 @@ abstract class FFmpeg::Video
     Frame    = 8 # instead of a timestamp, use frame numbering
   end
 
-  def seek(timestamp : Int64, style : SeekStyle = SeekStyle::Backward | SeekStyle::Any)
+  def seek(timestamp : Int64, style : SeekStyle = SeekStyle::None)
   end
 
   protected def configure

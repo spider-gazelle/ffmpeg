@@ -125,5 +125,6 @@ module FFmpeg::LibAV
     ) : LibC::Int
 
     fun find_decoder = avcodec_find_decoder(codec_id : LibC::Int) : AVCodec
+    fun flush_buffers = avcodec_flush_buffers(codec : Context*)
   end
 end

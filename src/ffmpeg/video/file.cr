@@ -17,9 +17,10 @@ class FFmpeg::Video::File < FFmpeg::Video
     @io.closed?
   end
 
-  def seek(timestamp : Int64, style : SeekStyle = SeekStyle::Backward | SeekStyle::Any)
+  def seek(timestamp : Int64, style : SeekStyle = SeekStyle::None)
     success = LibAV::Util.seek_frame(format, @stream_index, 0_i64, style.value)
     raise "seek failed" if success < 0
+    @codec.try &.flush_buffers
   end
 
   def configure_read
