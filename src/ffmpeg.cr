@@ -29,4 +29,11 @@ module FFmpeg
     Lanczos       = 0x200
     BicubicSpline = 0x400
   end
+
+  def self.get_error_message(error : Int32)
+    buffer = Bytes.new(64) # max error message length
+    success = FFmpeg::LibAV::Util.strerror(error, buffer, buffer.size)
+    return "unknown" if success < 0
+    String.new(buffer.to_unsafe) # unsafe as it's \0 terminated
+  end
 end

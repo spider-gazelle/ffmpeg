@@ -26,5 +26,6 @@ module FFmpeg::LibAV
     fun image_fill_arrays = av_image_fill_arrays(dst_data : UInt8**, linesizes : LibC::Int*, img_buffer : UInt8*, pix_fmt : PixelFormat, width : LibC::Int, height : LibC::Int, align : LibC::Int) : LibC::Int
 
     fun seek_frame = av_seek_frame(frame : Format::Context*, stream_index : LibC::Int, timestamp : LibC::Int64T, flags : LibC::Int) : LibC::Int
+    fun strerror = av_strerror(errnum : LibC::Int, errbuf : UInt8*, errbuf_size : LibC::SizeT) : LibC::Int
   end
 end

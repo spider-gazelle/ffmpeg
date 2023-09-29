@@ -40,7 +40,7 @@ class FFmpeg::Codec
   def parameters
     params = Parameters.new
     success = LibAV::Codec.parameters_from_context(params, @context)
-    raise "failed to obtain parameters from context with #{success}" if success < 0
+    raise "failed to obtain parameters from context with #{success}: #{FFmpeg.get_error_message(success)}" if success < 0
     params
   end
 
@@ -57,7 +57,7 @@ class FFmpeg::Codec
 
   def open
     success = LibAV::Codec.open2(@context, codec, Pointer(Void).null)
-    raise "failed to open codec" if success < 0
+    raise "failed to open codec #{success}: #{FFmpeg.get_error_message(success)}" if success < 0
     self
   end
 
@@ -65,7 +65,7 @@ class FFmpeg::Codec
 
   def decode(packet : Packet, &)
     success = LibAV::Codec.send_packet(@context, packet)
-    raise "failed to read packet with #{success}" if success < 0
+    raise "failed to read packet with #{success}: #{FFmpeg.get_error_message(success)}" if success < 0
 
     loop do
       break unless LibAV::Codec.receive_frame(@context, frame) == 0

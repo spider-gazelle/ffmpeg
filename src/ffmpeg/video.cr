@@ -67,7 +67,7 @@ abstract class FFmpeg::Video
     @codec = codec
     @on_codec.try &.call(codec)
 
-    seek(0)
+    seek(0, SeekStyle::Frame)
 
     Log.trace { "extracting frames" }
     while !closed?

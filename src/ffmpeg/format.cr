@@ -83,7 +83,7 @@ class FFmpeg::Format
   def open(input : String)
     raise "already open" if open?
     success = LibAV::Format.open_input(pointerof(@context), input, Pointer(Void).null, Pointer(Void).null)
-    raise "failed to open stream with #{success}" unless success.zero?
+    raise "failed to open stream with #{success}: #{FFmpeg.get_error_message(success)}" unless success.zero?
     @input = input
     self
   end
@@ -91,7 +91,7 @@ class FFmpeg::Format
   def stream_info
     raise "must open a stream first" unless open?
     success = LibAV::Format.find_stream_info(@context, Pointer(Void).null)
-    raise "failed to find stream info #{success}" if success < 0
+    raise "failed to find stream info #{success}: #{FFmpeg.get_error_message(success)}" if success < 0
     self
   end
 
@@ -118,7 +118,8 @@ class FFmpeg::Format
 
   def read(&)
     status = LibAV::Format.read_frame(@context, packet)
-    raise "failed to read a frame with #{status}" if status < 0
+    raise "failed to read a frame with #{status}: #{FFmpeg.get_error_message(status)}" if status < 0
+
     begin
       yield packet
     ensure
