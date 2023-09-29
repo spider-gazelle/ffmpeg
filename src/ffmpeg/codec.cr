@@ -63,8 +63,13 @@ class FFmpeg::Codec
 
   getter frame : Frame { Frame.new }
 
-  def decode(packet : Packet, &)
-    success = LibAV::Codec.send_packet(@context, packet)
+  def decode(packet : Packet?, &)
+    success = if packet
+                LibAV::Codec.send_packet(@context, packet)
+              else
+                # flush the codec for any final frames
+                LibAV::Codec.send_packet(@context, Pointer(FFmpeg::LibAV::Codec::Packet).null)
+              end
     raise "failed to read packet with #{success}: #{FFmpeg.get_error_message(success)}" if success < 0
 
     loop do

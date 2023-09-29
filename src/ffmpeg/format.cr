@@ -118,7 +118,15 @@ class FFmpeg::Format
 
   def read(&)
     status = LibAV::Format.read_frame(@context, packet)
-    raise "failed to read a frame with #{status}: #{FFmpeg.get_error_message(status)}" if status < 0
+
+    if status < 0
+      case status
+      when AVERROR_EOF
+        raise IO::EOFError.new(FFmpeg.get_error_message(status))
+      else
+        raise "failed to read a frame with #{status}: #{FFmpeg.get_error_message(status)}"
+      end
+    end
 
     begin
       yield packet

@@ -36,4 +36,14 @@ module FFmpeg
     return "unknown" if success < 0
     String.new(buffer.to_unsafe) # unsafe as it's \0 terminated
   end
+
+  def self.mktag(a : Char, b : Char, c : Char, d : Char)
+    (a.ord) | (b.ord << 8) | (c.ord << 16) | (d.ord.to_u << 24)
+  end
+
+  def self.fferrtag(a : Char, b : Char, c : Char, d : Char)
+    -(mktag(a, b, c, d))
+  end
+
+  AVERROR_EOF = fferrtag('E', 'O', 'F', ' ')
 end

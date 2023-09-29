@@ -69,14 +69,20 @@ abstract class FFmpeg::Video
 
     seek(0, SeekStyle::Frame)
 
-    Log.trace { "extracting frames" }
-    while !closed?
-      format.read do |packet|
-        if packet.stream_index == stream_index
-          codec.decode(packet) do |frame|
-            yield frame
+    begin
+      Log.trace { "extracting frames" }
+      while !closed?
+        format.read do |packet|
+          if packet.stream_index == stream_index
+            codec.decode(packet) do |frame|
+              yield frame
+            end
           end
         end
+      end
+    rescue error : IO::EOFError
+      codec.decode(nil) do |frame|
+        yield frame
       end
     end
   ensure
