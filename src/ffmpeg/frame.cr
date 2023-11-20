@@ -99,6 +99,9 @@ class FFmpeg::Frame
     when .rgb48_le?, .rgb48_be?
       new_frame = FFmpeg::Frame.new(self)
       new_frame.quick_crop_rgb48(top, left, bottom, right)
+    when .yuyv422?
+      new_frame = FFmpeg::Frame.new(self)
+      new_frame.quick_crop_uyvy(top, left, bottom, right)
     end
     new_frame
   end
@@ -113,6 +116,18 @@ class FFmpeg::Frame
     @frame.value.data[0] = @frame.value.data[0] + (top * @frame.value.linesize[0] + left)               # Y plane
     @frame.value.data[1] = @frame.value.data[1] + (chroma_top * @frame.value.linesize[1] + chroma_left) # U plane
     @frame.value.data[2] = @frame.value.data[2] + (chroma_top * @frame.value.linesize[2] + chroma_left) # V plane
+  end
+
+  protected def quick_crop_uyvy(top : Int32, left : Int32, bottom : Int32, right : Int32) : Nil
+    # Adjust width and height. Note that the width should be an even number.
+    @frame.value.height = height - top - bottom
+    @frame.value.width = (width - left - right) & ~1
+  
+    # Adjust the pointer into the buffer.
+    # Since UYVY is a packed format, we need to adjust the starting point of the data buffer.
+    # We also need to ensure left is even to align correctly with the UYVY pairs.
+    adjusted_left = left & ~1
+    @frame.value.data[0] = @frame.value.data[0] + (top * @frame.value.linesize[0] + adjusted_left * 2)
   end
 
   protected def quick_crop_rgb(top : Int32, left : Int32, bottom : Int32, right : Int32) : Nil
