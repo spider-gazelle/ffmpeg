@@ -77,4 +77,11 @@ class FFmpeg::SWScale
     LibAV::SWScale.scale(@context, inp.value.data, inp.value.linesize, 0, input.height, outp.value.data, outp.value.linesize)
     output
   end
+
+  def self.scale(input : Frame, width : Int32, height : Int32, output_format : PixelFormat = PixelFormat::Rgb24, scaling_method : ScalingAlgorithm = ScalingAlgorithm::Bicublin) : Frame
+    new(
+      input.width, input.height, input.pixel_format,
+      width, height, output_format, scaling_method
+    ).unsafe_scale(input)
+  end
 end
