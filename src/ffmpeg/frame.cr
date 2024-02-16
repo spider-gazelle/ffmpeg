@@ -156,7 +156,7 @@ class FFmpeg::Frame
     bottom = bottom.clamp(0, max_y)
     left = left.clamp(0, max_x)
     right = right.clamp(0, max_x)
-    raise "crop is not valid: #{left},#{top} => #{right},#{bottom}" if (left + right) >= max_x || (top + bottom) >= max_y
+    raise "crop on #{max_x}x#{max_y} is not valid: #{left},#{top} => #{right},#{bottom}" if (left + right) >= max_x || (top + bottom) >= max_y
     return self if top.zero? && left.zero? && bottom.zero? && right.zero?
 
     unsafe_crop(top, left, bottom, right)
