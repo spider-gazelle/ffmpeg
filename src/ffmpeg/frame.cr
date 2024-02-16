@@ -122,7 +122,7 @@ class FFmpeg::Frame
     # Adjust width and height. Note that the width should be an even number.
     @frame.value.height = height - top - bottom
     @frame.value.width = (width - left - right) & ~1
-  
+
     # Adjust the pointer into the buffer.
     # Since UYVY is a packed format, we need to adjust the starting point of the data buffer.
     # We also need to ensure left is even to align correctly with the UYVY pairs.
@@ -146,22 +146,41 @@ class FFmpeg::Frame
     @frame.value.data[0] = @frame.value.data[0] + (top * @frame.value.linesize[0] + left * 6) # 6 bytes per pixel
   end
 
-  # crop helper
+  # crop helper - values are pixel distances from the edges
+  # NOTE:: when streaming video you'd want to cache scalers. This is useful where
+  # you need to crop different segments each frame
   def crop(top : Int32, left : Int32, bottom : Int32, right : Int32) : FFmpeg::Frame
+    max_x = width
+    max_y = height
+    top = top.clamp(0, max_y)
+    bottom = bottom.clamp(0, max_y)
+    left = left.clamp(0, max_x)
+    right = right.clamp(0, max_x)
+    raise "crop is not valid: #{left},#{top} => #{right},#{bottom}" if (left + right) >= max_x || (top + bottom) >= max_y
     return self if top.zero? && left.zero? && bottom.zero? && right.zero?
 
+    unsafe_crop(top, left, bottom, right)
+  end
+
+  def unsafe_crop(top : Int32, left : Int32, bottom : Int32, right : Int32) : FFmpeg::Frame
     # copy buffer if quick crop is supported
     if frame = quick_crop(top, left, bottom, right)
-      new_frame = Frame.new(frame.width, frame.height, frame.pixel_format, buffer: buffer)
+      new_frame = Frame.new(frame.width, frame.height, frame.pixel_format)
       frame.copy_to new_frame
       new_frame
     else
       # convert to a format that we can use quick crop with
-      rgb_frame = Frame.new(width, height, :rgb24)
-      scaler = SWScale.new(width, height, pixel_format, width, height, :rgb24)
-      scaler.scale(self, rgb_frame)
-      rgb_frame.crop(top, left, bottom, right)
+      convert_to(:rgb24).unsafe_crop(top, left, bottom, right)
     end
+  end
+
+  # helper for converting to another format
+  # NOTE:: when streaming video you'd want to cache this scaler.
+  def convert_to(pixel_format : LibAV::PixelFormat) : FFmpeg::Frame
+    new_frame = Frame.new(width, height, pixel_format)
+    scaler = SWScale.new(width, height, self.pixel_format, width, height, pixel_format)
+    scaler.scale(self, new_frame)
+    new_frame
   end
 
   # copies the image buffer to a new frame
@@ -193,13 +212,7 @@ class FFmpeg::Frame
   # a very simple way to get a stumpy canvas from a frame
   # also very inefficient so I don't recommend using in production
   def to_canvas : StumpyCore::Canvas
-    if pixel_format.rgb48_le?
-      rgb_frame = self
-    else
-      rgb_frame = Frame.new(width, height, :rgb48Le)
-      scaler = SWScale.new(width, height, pixel_format, width, height, :rgb48Le)
-      scaler.scale(self, rgb_frame)
-    end
+    rgb_frame = pixel_format.rgb48_le? ? self : convert_to(:rgb48Le)
 
     pixel_components = width * height * 3
     pointer = Pointer(UInt16).new(rgb_frame.buffer.to_unsafe.address)

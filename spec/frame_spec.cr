@@ -22,7 +22,7 @@ module FFmpeg
     end
 
     it "converts to and from stumpy canvas" do
-      checkerboard = StumpyCore::Canvas.new(250, 250) do |x, y|
+      large_checkerboard = StumpyCore::Canvas.new(250, 250) do |x, y|
         if ((x // 32) + (y // 32)).odd?
           StumpyCore::RGBA.from_hex("#ffffff")
         else
@@ -30,76 +30,69 @@ module FFmpeg
         end
       end
 
-      frame = Frame.new checkerboard
+      frame = Frame.new large_checkerboard
       canvas = frame.to_canvas
 
-      checkerboard.should eq canvas
+      large_checkerboard.should eq canvas
     end
 
-    it "crops images using quick crop yuv420" do
-      width, height = 60, 60
-      checkerboard = StumpyCore::Canvas.new(width, height) do |x, y|
-        if ((x // 32) + (y // 32)).odd?
-          StumpyCore::RGBA.from_hex("#ffffff")
-        else
-          StumpyCore::RGBA.from_hex("#000000")
-        end
+    check_width, check_height = 60, 60
+    checkerboard = StumpyCore::Canvas.new(check_width, check_height) do |x, y|
+      if ((x // 32) + (y // 32)).odd?
+        StumpyCore::RGBA.from_hex("#ffffff")
+      else
+        StumpyCore::RGBA.from_hex("#000000")
       end
-      frame = Frame.new checkerboard
+    end
+    check_frame = Frame.new checkerboard
+    StumpyPNG.write(checkerboard, "./checkerboard.png")
 
-      StumpyPNG.write(checkerboard, "./checkerboard.png")
-
+    it "crops images using quick crop yuv420" do
       # convert to yuv420
-      yuv_frame = Frame.new(width, height, :yuv420_p)
-      scaler = SWScale.new(width, height, frame.pixel_format, width, height, :yuv420_p)
-      scaler.scale(frame, yuv_frame)
+      yuv_frame = check_frame.convert_to(:yuv420_p)
 
       # we can quick crop this frame
       sub_frame = yuv_frame.quick_crop(20, 20, 20, 20)
       raise "should return a sub frame" unless sub_frame
 
-      width, height = sub_frame.width, sub_frame.height
-      new_frame = Frame.new(width, height, :rgb48Le)
-      scaler = SWScale.new(width, height, :yuv420_p, width, height, :rgb48Le)
-      scaler.scale(sub_frame, new_frame)
-      new_canvas = new_frame.to_canvas
-
       # check the output
+      new_canvas = sub_frame.to_canvas
       new_canvas.width.should eq 20
       new_canvas.height.should eq 20
 
       slow_crop = StumpyResize.crop checkerboard, 20, 20, 40, 40
-      StumpyPNG.write(new_canvas, "./checkerboard-fast-crop.png")
-      StumpyPNG.write(slow_crop, "./checkerboard-slow-crop.png")
+      StumpyPNG.write(new_canvas, "./checkerboard-fast-crop-yuv420.png")
+      StumpyPNG.write(slow_crop, "./checkerboard-slow-crop-yuv420.png")
+    end
+
+    it "crops images using quick crop yuyv422" do
+      # convert to yuv420
+      yuv_frame = check_frame.convert_to(:yuyv422)
+
+      # we can quick crop this frame
+      sub_frame = yuv_frame.quick_crop(20, 20, 20, 20)
+      raise "should return a sub frame" unless sub_frame
+
+      # check the output
+      new_canvas = sub_frame.to_canvas
+      new_canvas.width.should eq 20
+      new_canvas.height.should eq 20
+
+      slow_crop = StumpyResize.crop checkerboard, 20, 20, 40, 40
+      StumpyPNG.write(new_canvas, "./checkerboard-fast-crop-yuyv422.png")
+      StumpyPNG.write(slow_crop, "./checkerboard-slow-crop-yuyv422.png")
     end
 
     it "crops images using quick crop rgb24" do
-      width, height = 60, 60
-      checkerboard = StumpyCore::Canvas.new(width, height) do |x, y|
-        if ((x // 32) + (y // 32)).odd?
-          StumpyCore::RGBA.from_hex("#ffffff")
-        else
-          StumpyCore::RGBA.from_hex("#000000")
-        end
-      end
-      frame = Frame.new checkerboard
-
       # convert to rgb24
-      rgb_frame = Frame.new(width, height, :rgb24)
-      scaler = SWScale.new(width, height, frame.pixel_format, width, height, :rgb24)
-      scaler.scale(frame, rgb_frame)
+      rgb_frame = check_frame.convert_to(:rgb24)
 
       # we can quick crop this frame
       sub_frame = rgb_frame.quick_crop(20, 20, 20, 20)
       raise "should return a sub frame" unless sub_frame
 
-      width, height = sub_frame.width, sub_frame.height
-      new_frame = Frame.new(width, height, :rgb48Le)
-      scaler = SWScale.new(width, height, :rgb24, width, height, :rgb48Le)
-      scaler.scale(sub_frame, new_frame)
-      new_canvas = new_frame.to_canvas
-
       # check the output
+      new_canvas = sub_frame.to_canvas
       new_canvas.width.should eq 20
       new_canvas.height.should eq 20
 
@@ -112,17 +105,7 @@ module FFmpeg
     end
 
     it "crops the image using the crop helper" do
-      width, height = 60, 60
-      checkerboard = StumpyCore::Canvas.new(width, height) do |x, y|
-        if ((x // 32) + (y // 32)).odd?
-          StumpyCore::RGBA.from_hex("#ffffff")
-        else
-          StumpyCore::RGBA.from_hex("#000000")
-        end
-      end
-      frame = Frame.new checkerboard
-
-      sub_frame = frame.crop(20, 20, 20, 20)
+      sub_frame = check_frame.crop(20, 20, 20, 20)
       sub_frame.width.should eq 20
       sub_frame.height.should eq 20
 
