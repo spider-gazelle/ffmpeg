@@ -1,4 +1,4 @@
-# ffmpeg libav bindings for crystal lang
+# ffmpeg bindings for crystal lang
 
 [![CI](https://github.com/spider-gazelle/ffmpeg/actions/workflows/ci.yml/badge.svg)](https://github.com/spider-gazelle/ffmpeg/actions/workflows/ci.yml)
 
