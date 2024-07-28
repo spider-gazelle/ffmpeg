@@ -5,6 +5,7 @@ module FFmpeg::LibAV
   lib Util
     AV_NUM_DATA_POINTERS = 8
 
+    # https://ffmpeg.org//doxygen/trunk/frame_8h_source.html
     struct AVFrame
       data : UInt8*[8]
       linesize : LibC::Int[8]
@@ -13,7 +14,6 @@ module FFmpeg::LibAV
       height : LibC::Int
       nb_samples : LibC::Int
       format : PixelFormat
-      key_frame : LibC::Int
     end
 
     fun version_info = av_version_info : LibC::Char*

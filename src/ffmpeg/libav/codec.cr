@@ -27,10 +27,13 @@ module FFmpeg::LibAV
 
     fun packet_unref = av_packet_unref(pkt : Packet*)
 
+    # https://ffmpeg.org//doxygen/trunk/structAVCodec.html
     type AVCodec = Void*
     # type Context = Void*
     type AVCodecParameters = Void*
 
+    # https://ffmpeg.org//doxygen/trunk/structAVCodecContext.html
+    # https://ffmpeg.org//doxygen/trunk/avcodec_8h_source.html
     struct Context
       av_class : Void*
       log_level_offset : LibC::Int
@@ -38,27 +41,26 @@ module FFmpeg::LibAV
       codec : AVCodec
       codec_id : LibC::Int
       codec_tag : LibC::UInt
-      stream_codec_tag : LibC::UInt
       priv_data : Void*
       internal : Void*
       opaque : Void*
       bit_rate : LibC::Int64T
-      bit_rate_tolerance : LibC::Int
-      global_quality : LibC::Int
-      compression_level : LibC::Int
       flags : LibC::Int
       flags2 : LibC::Int
       extradata : LibC::UInt8T*
       extradata_size : LibC::Int
       time_base : Rational
+      pkt_timebase : Rational
+      framerate : Rational
       ticks_per_frame : LibC::Int
       delay : LibC::Int
       width : LibC::Int
       height : LibC::Int
       coded_width : LibC::Int
       coded_height : LibC::Int
-      gop_size : LibC::Int
+      sample_aspect_ratio : Rational
       pix_fmt : PixelFormat
+      sw_pix_fmt : PixelFormat
     end
 
     struct Rational
@@ -66,6 +68,8 @@ module FFmpeg::LibAV
       den : LibC::Int
     end
 
+    # https://ffmpeg.org//doxygen/trunk/structAVPacket.html
+    # https://ffmpeg.org//doxygen/trunk/packet_8h_source.html
     struct Packet
       buf : Void*
       pts : LibC::Long
@@ -78,7 +82,6 @@ module FFmpeg::LibAV
       side_data_elems : LibC::Int
       duration : LibC::Long
       pos : LibC::Long
-      convergence_duration : LibC::Long
     end
 
     # https://ffmpeg4d.dpldocs.info/ffmpeg.libavcodec.avcodec.avcodec_open2.html

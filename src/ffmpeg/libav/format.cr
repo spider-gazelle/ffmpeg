@@ -52,6 +52,10 @@ module FFmpeg::LibAV
       ctx_flags : LibC::Int
       nb_streams : LibC::UInt
       streams : AVStream**
+      nb_stream_groups : LibC::UInt
+      stream_groups : Void*
+      nb_chapters : LibC::UInt
+      chapters : Void*
       url : UInt8*
       start_time : LibC::Int64T
       duration : LibC::Int64T
@@ -63,10 +67,12 @@ module FFmpeg::LibAV
       max_analyze_duration : LibC::Int64T
     end
 
+    # https://ffmpeg.org/doxygen/trunk/structAVStream.html
     struct AVStream
+      av_class : Void*
       index : LibC::Int
       id : LibC::Int
-      codec : Codec::Context*
+      codecpar : Codec::AVCodecParameters
       priv_data : Void*
       time_base : Codec::Rational
       start_time : LibC::Long
@@ -78,12 +84,9 @@ module FFmpeg::LibAV
       metadata : Void*
       avg_frame_rate : Codec::Rational
       attached_pic : Codec::Packet
-      side_data : Void*
-      nb_side_data : LibC::Int
       event_flags : LibC::Int
       r_frame_rate : Codec::Rational
-      recommended_encoder_configuration : LibC::Char*
-      codecpar : Codec::AVCodecParameters
+      pts_wrap_bits : LibC::Int
     end
   end
 end
