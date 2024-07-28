@@ -88,7 +88,7 @@ class FFmpeg::Frame
   end
 
   # crops the frame for use with scaler to combine cropping in a single operation
-  def quick_crop(top : Int32, left : Int32, bottom : Int32, right : Int32) : FFmpeg::Frame?
+  def quick_crop(top : Int32, left : Int32, bottom : Int32, right : Int32) : FFmpeg::Frame
     case pixel_format
     when .yuv420_p?, .yuvj420_p?
       new_frame = FFmpeg::Frame.new(self)
@@ -102,6 +102,8 @@ class FFmpeg::Frame
     when .yuyv422?
       new_frame = FFmpeg::Frame.new(self)
       new_frame.quick_crop_uyvy(top, left, bottom, right)
+    else
+      raise "pixel format #{pixel_format} does not support quick crop"
     end
     new_frame
   end
