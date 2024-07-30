@@ -58,8 +58,8 @@ class FFmpeg::SWScale
   getter output_format : PixelFormat
   getter scaling_method : ScalingAlgorithm
 
-  # lazy init an output frame if one isn't provided
-  getter output_frame : Frame do
+  # create a compatible output frame for storing the scaled result
+  def output_frame : Frame
     FFmpeg::Frame.new(@output_width, @output_height, @output_format)
   end
 
